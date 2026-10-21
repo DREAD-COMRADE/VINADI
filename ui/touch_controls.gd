@@ -23,6 +23,8 @@ var _game_ui = null
 # Look sensitivity — standard for mobile FPS swipe look
 @export var look_sensitivity: float = 0.0015
 @export var auto_sprint_threshold: float = 0.85
+## Set to true in Inspector if you want to preview/test touch controls on PC desktop
+@export var force_show_for_testing: bool = false
 
 # Swipe-to-look touch tracking
 var _look_touch_id: int = -1
@@ -36,13 +38,13 @@ func _ready() -> void:
 	_connect_joystick()
 	call_deferred("_setup_references")
 
-	# Auto-show on touchscreens, mobile devices, or when touch emulation is enabled
-	var show_hud: bool = DisplayServer.is_touchscreen_available() \
-		or OS.has_feature("mobile") \
+	# Only show on mobile devices (Android / iOS) or physical touchscreens
+	# Hidden completely on the Windows .exe version unless force_show_for_testing is checked
+	var is_mobile_device: bool = OS.has_feature("mobile") \
 		or OS.has_feature("android") \
 		or OS.has_feature("ios") \
-		or ProjectSettings.get_setting("input_devices/pointing/emulate_touch_from_mouse", false)
-	visible = show_hud
+		or DisplayServer.is_touchscreen_available()
+	visible = is_mobile_device or force_show_for_testing
 
 	# Keep joystick region updated when viewport/window size changes
 	var vp := get_viewport()
