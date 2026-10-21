@@ -2,7 +2,6 @@
 
 [ext_resource type="Script" path="res://ui/touch_controls.gd" id="1_touch"]
 
-[node name="TouchControls" type="CanvasLayer"]
+[node name="TouchControls" type="Node3D"]
 process_mode = 3
-layer = 8
 script = ExtResource("1_touch")

@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://dgj5lritniyv6"
 path.s3tc="res://.godot/imported/futuristic-scifi-metal-panel-texture-260nw-2792936327.jpg-e3b419c2bd41eeb36a9ed74e41eed2a7.s3tc.ctex"
+path.etc2="res://.godot/imported/futuristic-scifi-metal-panel-texture-260nw-2792936327.jpg-e3b419c2bd41eeb36a9ed74e41eed2a7.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/UI/futuristic-scifi-metal-panel-texture-260nw-2792936327.jpg"
-dest_files=["res://.godot/imported/futuristic-scifi-metal-panel-texture-260nw-2792936327.jpg-e3b419c2bd41eeb36a9ed74e41eed2a7.s3tc.ctex"]
+dest_files=["res://.godot/imported/futuristic-scifi-metal-panel-texture-260nw-2792936327.jpg-e3b419c2bd41eeb36a9ed74e41eed2a7.s3tc.ctex", "res://.godot/imported/futuristic-scifi-metal-panel-texture-260nw-2792936327.jpg-e3b419c2bd41eeb36a9ed74e41eed2a7.etc2.ctex"]
 
 [params]
 

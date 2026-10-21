@@ -1,58 +1,55 @@
-extends CanvasLayer
+extends Node3D
 
 # ==============================================================================
-# VINADI — MOBILE TOUCH CONTROLS & VIRTUAL JOYSTICK
-# Provides a full on-screen touch interface for Android / mobile:
-#   - Floating dynamic virtual joystick on left half (movement + auto-sprint)
-#   - Smooth drag-look trackpad on right half (camera rotation)
-#   - Dedicated action touch buttons: JUMP, SLIDE, USE, PAUSE
-# Automatically enables on mobile/touchscreen devices, or via debug toggle.
+# VINADI — MOBILE TOUCH CONTROLS
+# Uses the VirtualJoystickDX addon for movement joystick.
+# Swipe-to-look on right half, action buttons follow industry-standard placement.
+#
+# Layout (designed for 1280×720 canvas, scales with resolution):
+#
+#  LEFT HALF              |  RIGHT HALF
+#  ───────────────────────┼───────────────────────────
+#  [JOYSTICK - DYNAMIC]   |  [PAUSE]   (top-right, 44 px)
+#  bottom-left ~160,590   |
+#                         |  [USE]     (right col, row 2) 78 px
+#  Swipe to look freely   |  [SLIDE]   (right row 1)  72 px
+#  anywhere on right half |  [JUMP]    (bottom-right) 88 px
+#
+# References: COD Mobile, PUBG Mobile, Standoff 2 (FPS-standard proportions)
 # ==============================================================================
 
-# References
 var _player: CharacterBody3D = null
 var _head: Node3D = null
 var _game_ui = null
 
-# Configuration
-@export var touch_look_sensitivity: float = 0.003
-@export var joystick_radius: float = 65.0
-@export var auto_sprint_threshold: float = 0.85
+# Look sensitivity — FPS mobile standard is ~2.5× lower than mouse
+const LOOK_SENSITIVITY: float = 0.0015
 
-# State - Joystick
-var _joystick_active: bool = false
-var _joystick_touch_id: int = -1
-var _joystick_center: Vector2 = Vector2.ZERO
-var _joystick_current: Vector2 = Vector2.ZERO
-var _joystick_dir: Vector2 = Vector2.ZERO
-var _is_sprinting: bool = false
-
-# State - Look Drag
+# Look drag state
 var _look_touch_id: int = -1
 var _look_last_pos: Vector2 = Vector2.ZERO
 
-# UI Nodes
-var _root: Control
-var _joystick_base: Control
-var _joystick_knob: Control
+# Node references
+var _canvas_layer: CanvasLayer
+var _joystick: Node = null  # VirtualJoystickDX instance
 var _btn_jump: Button
 var _btn_slide: Button
 var _btn_use: Button
 var _btn_pause: Button
+var _look_area: Control
+var _root: Control
 
 
 func _ready() -> void:
-	layer = 8
-	process_mode = Node.PROCESS_MODE_ALWAYS
-	_build_ui()
+	_build_hud()
 	call_deferred("_setup_references")
-
-	# Check if running on mobile device or if touchscreen is detected
-	var is_touch := DisplayServer.is_touchscreen_available() or \
-			OS.has_feature("mobile") or OS.has_feature("android") or OS.has_feature("ios")
-	
-	# Always visible on touch devices; on desktop, keep available for testing via touch emulation
-	visible = is_touch or ProjectSettings.get_setting("input_devices/pointing/emulate_touch_from_mouse", false)
+	# Auto-show only on touchscreen or mobile
+	var show_hud := DisplayServer.is_touchscreen_available() \
+		or OS.has_feature("mobile") \
+		or OS.has_feature("android") \
+		or OS.has_feature("ios") \
+		or ProjectSettings.get_setting("input_devices/pointing/emulate_touch_from_mouse", false)
+	_canvas_layer.visible = show_hud
 
 
 func _setup_references() -> void:
@@ -60,283 +57,271 @@ func _setup_references() -> void:
 	if players.size() > 0:
 		_player = players[0] as CharacterBody3D
 		if _player:
-			_head = _player.get_node_or_null("%Head")
+			_head = _player.find_child("Head", true, false)
 			if not _head:
-				_head = _player.find_child("Head", true, false)
-
+				_head = _player.get_node_or_null("%Head")
 	var guis := get_tree().get_nodes_in_group("game_ui")
 	if guis.size() > 0:
 		_game_ui = guis[0]
 
 
-func _build_ui() -> void:
-	var font: FontFile = load("res://fonts/Rajdhani-SemiBold.ttf") as FontFile
-	if not font:
-		font = load("res://font/Rajdhani-SemiBold.ttf") as FontFile
+func _build_hud() -> void:
+	_canvas_layer = CanvasLayer.new()
+	_canvas_layer.name = "MobileTouchHUD"
+	_canvas_layer.layer = 8
+	_canvas_layer.process_mode = Node.PROCESS_MODE_ALWAYS
+	add_child(_canvas_layer)
 
 	_root = Control.new()
 	_root.name = "TouchRoot"
 	_root.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_root.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(_root)
+	_canvas_layer.add_child(_root)
 
-	# ── Joystick Visuals ───────────────────────────────────────────────────────
-	_joystick_base = _create_circle_panel(joystick_radius * 2.0, Color(0, 0, 0, 0.4), Color(1, 1, 1, 0.7), 2)
-	_joystick_base.visible = false
-	_joystick_base.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_root.add_child(_joystick_base)
+	_build_look_area()
+	_build_joystick()
+	_build_action_buttons()
 
-	_joystick_knob = _create_circle_panel(joystick_radius * 0.9, Color(1, 1, 1, 0.85), Color(0.1, 0.9, 0.5, 0.9), 2)
-	_joystick_knob.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_joystick_base.add_child(_joystick_knob)
 
-	# ── Default idle hint for joystick position ───────────────────────────────
-	var default_hint := _create_circle_panel(joystick_radius * 2.0, Color(0, 0, 0, 0.2), Color(1, 1, 1, 0.25), 1)
-	default_hint.set_anchor_and_offset(SIDE_LEFT, 0.0, 60.0)
-	default_hint.set_anchor_and_offset(SIDE_BOTTOM, 1.0, -60.0 - joystick_radius * 2.0)
-	default_hint.custom_minimum_size = Vector2(joystick_radius * 2.0, joystick_radius * 2.0)
-	default_hint.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_root.add_child(default_hint)
+func _build_look_area() -> void:
+	# Invisible Control covering the full screen to receive drag events for camera look.
+	# Buttons on top of it consume their own touches first.
+	_look_area = Control.new()
+	_look_area.name = "LookArea"
+	_look_area.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_look_area.mouse_filter = Control.MOUSE_FILTER_IGNORE  # pass to _input
+	_root.add_child(_look_area)
 
-	# ── Action Buttons ────────────────────────────────────────────────────────
-	# JUMP
-	_btn_jump = _create_action_button("JUMP", Vector2(74, 74), font)
-	_btn_jump.set_anchor_and_offset(SIDE_RIGHT, 1.0, -35.0)
-	_btn_jump.set_anchor_and_offset(SIDE_BOTTOM, 1.0, -55.0)
-	_btn_jump.button_down.connect(_on_jump_down)
-	_btn_jump.button_up.connect(_on_jump_up)
+
+func _build_joystick() -> void:
+	# ── VirtualJoystickDX ────────────────────────────────────────────────────
+	# Industry standard: DYNAMIC mode, bottom-left corner.
+	# Entire left-half screen is active region.
+	# Base radius 90 px, thumb radius 30 px.
+	# Centered at approx (160, screen_bottom - 130).
+	var script: Script = load("res://addons/virtual_joystick_DX/vjdx_core_script.gd")
+	if not script:
+		push_error("VirtualJoystickDX: core script not found. Is the plugin enabled?")
+		return
+
+	_joystick = script.new()
+	_joystick.name = "MoveJoystick"
+	_joystick.process_mode = Node.PROCESS_MODE_ALWAYS
+
+	# Size — set large enough for the base circle
+	_joystick.custom_minimum_size = Vector2(180, 180)
+	_joystick.size = Vector2(180, 180)
+
+	# Anchor: bottom-left corner. Offset inward so center sits at (160, h-130)
+	# anchor (0,1) = bottom-left, then offset right and up
+	_joystick.set_anchor_and_offset(SIDE_LEFT,   0.0,  70.0)   # 70 px from left
+	_joystick.set_anchor_and_offset(SIDE_RIGHT,  0.0, 250.0)   # 70 + 180
+	_joystick.set_anchor_and_offset(SIDE_TOP,    1.0, -220.0)  # 220 px above bottom
+	_joystick.set_anchor_and_offset(SIDE_BOTTOM, 1.0, -40.0)   # 40 px above bottom
+
+	# VirtualJoystickDX properties (via property assignment — works on @tool nodes)
+	_joystick.set("joystick_mode",    1)  # 1 = DYNAMIC
+	_joystick.set("controller_style", 0)  # 0 = JOYSTICK
+	_joystick.set("joystick_radius",  90.0)
+	_joystick.set("thumb_radius",     30.0)
+	_joystick.set("deadzone",         0.12)
+
+	# Input mapping — wire to game actions
+	_joystick.set("action_left",  "move_left")
+	_joystick.set("action_right", "move_right")
+	_joystick.set("action_up",    "move_forward")
+	_joystick.set("action_down",  "move_back")
+	_joystick.set("use_directional_mapping", true)
+
+	# Active region: left half of screen only (set via region props)
+	_joystick.set("use_active_region", true)
+	_joystick.set("region_x", 0.0)
+	_joystick.set("region_y", 0.0)
+	# region_w and region_h will be set after viewport is ready (see _setup_references)
+	# We'll set them to half-viewport dynamically
+
+	# Style — translucent white circles, no texture (clean look)
+	_joystick.set("debug_deadzone",  false)
+	_joystick.set("debug_clampzone", false)
+	_joystick.set("debug_show_region", false)
+	_joystick.set("clampzone_ratio", 1.5)
+
+	# Colors
+	_joystick.set("color_js_base",         Color(0.0, 0.0, 0.0, 0.45))
+	_joystick.set("color_js_border",       Color(1.0, 1.0, 1.0, 0.70))
+	_joystick.set("color_js_thumb",        Color(1.0, 1.0, 1.0, 0.65))
+	_joystick.set("color_js_thumb_active", Color(0.12, 1.0, 0.5, 0.90))
+
+	# Haptics
+	_joystick.set("haptic_enabled", true)
+
+	# Auto-hide when gamepad connected
+	_joystick.set("auto_hide_on_physical_input", true)
+	_joystick.set("auto_show_on_touch", true)
+
+	_root.add_child(_joystick)
+
+
+func _build_action_buttons() -> void:
+	var font: FontFile = _load_font()
+
+	# ── JUMP ────────────────────────────────────────────────────────────────
+	# Bottom-right corner. Biggest button — most frequent action.
+	# Size: 88 px. Position: 45 px from right, 50 px from bottom.
+	_btn_jump = _make_button("JUMP", 88, font, Color(1.0, 1.0, 1.0, 0.9))
+	_btn_jump.set_anchor_and_offset(SIDE_RIGHT,  1.0, -45.0)
+	_btn_jump.set_anchor_and_offset(SIDE_LEFT,   1.0, -133.0)
+	_btn_jump.set_anchor_and_offset(SIDE_BOTTOM, 1.0, -50.0)
+	_btn_jump.set_anchor_and_offset(SIDE_TOP,    1.0, -138.0)
+	_btn_jump.button_down.connect(func(): Input.action_press("jump", 1.0))
+	_btn_jump.button_up.connect(func(): Input.action_release("jump"))
 	_root.add_child(_btn_jump)
 
-	# SLIDE / CROUCH
-	_btn_slide = _create_action_button("SLIDE", Vector2(70, 70), font)
-	_btn_slide.set_anchor_and_offset(SIDE_RIGHT, 1.0, -125.0)
-	_btn_slide.set_anchor_and_offset(SIDE_BOTTOM, 1.0, -40.0)
-	_btn_slide.button_down.connect(_on_slide_down)
-	_btn_slide.button_up.connect(_on_slide_up)
+	# ── SLIDE/CROUCH ─────────────────────────────────────────────────────────
+	# Left of JUMP, same row. Slightly smaller.
+	# Size: 74 px. Position: 143 px from right, 55 px from bottom.
+	_btn_slide = _make_button("SLIDE", 74, font, Color(1.0, 1.0, 1.0, 0.9))
+	_btn_slide.set_anchor_and_offset(SIDE_RIGHT,  1.0, -143.0)
+	_btn_slide.set_anchor_and_offset(SIDE_LEFT,   1.0, -217.0)
+	_btn_slide.set_anchor_and_offset(SIDE_BOTTOM, 1.0, -55.0)
+	_btn_slide.set_anchor_and_offset(SIDE_TOP,    1.0, -129.0)
+	_btn_slide.button_down.connect(func(): Input.action_press("crouch", 1.0))
+	_btn_slide.button_up.connect(func(): Input.action_release("crouch"))
 	_root.add_child(_btn_slide)
 
-	# USE / DECONTAMINATE
-	_btn_use = _create_action_button("USE", Vector2(70, 70), font, Color(0.12, 1.0, 0.5, 0.95))
-	_btn_use.set_anchor_and_offset(SIDE_RIGHT, 1.0, -35.0)
-	_btn_use.set_anchor_and_offset(SIDE_BOTTOM, 1.0, -145.0)
-	_btn_use.button_down.connect(_on_use_down)
-	_btn_use.button_up.connect(_on_use_up)
+	# ── USE / INTERACT ───────────────────────────────────────────────────────
+	# Above JUMP. Green tint — matches the green button in the game world.
+	# Size: 78 px. Position: 48 px from right, 155 px from bottom.
+	_btn_use = _make_button("USE", 78, font, Color(0.12, 1.0, 0.5, 0.95))
+	_btn_use.set_anchor_and_offset(SIDE_RIGHT,  1.0, -48.0)
+	_btn_use.set_anchor_and_offset(SIDE_LEFT,   1.0, -126.0)
+	_btn_use.set_anchor_and_offset(SIDE_BOTTOM, 1.0, -155.0)
+	_btn_use.set_anchor_and_offset(SIDE_TOP,    1.0, -233.0)
+	_btn_use.button_down.connect(func(): Input.action_press("interact", 1.0))
+	_btn_use.button_up.connect(func(): Input.action_release("interact"))
 	_root.add_child(_btn_use)
 
-	# PAUSE (Top Right)
-	_btn_pause = _create_action_button("||", Vector2(48, 48), font)
-	_btn_pause.set_anchor_and_offset(SIDE_RIGHT, 1.0, -25.0)
-	_btn_pause.set_anchor_and_offset(SIDE_TOP, 0.0, 25.0)
+	# ── PAUSE ────────────────────────────────────────────────────────────────
+	# Top-right. Small (44 px) — user tolerates the reach because pause is rare.
+	_btn_pause = _make_button("||", 44, font, Color(1.0, 1.0, 1.0, 0.85))
+	_btn_pause.set_anchor_and_offset(SIDE_RIGHT,  1.0, -24.0)
+	_btn_pause.set_anchor_and_offset(SIDE_LEFT,   1.0, -68.0)
+	_btn_pause.set_anchor_and_offset(SIDE_TOP,    0.0,  24.0)
+	_btn_pause.set_anchor_and_offset(SIDE_BOTTOM, 0.0,  68.0)
 	_btn_pause.pressed.connect(_on_pause_pressed)
 	_root.add_child(_btn_pause)
 
 
-func _create_circle_panel(diameter: float, bg_color: Color, border_color: Color, border_width: int) -> Control:
-	var panel := Panel.new()
-	panel.custom_minimum_size = Vector2(diameter, diameter)
-	panel.size = Vector2(diameter, diameter)
-
-	var sb := StyleBoxFlat.new()
-	sb.bg_color = bg_color
-	sb.set_corner_radius_all(int(diameter * 0.5))
-	sb.set_border_width_all(border_width)
-	sb.border_color = border_color
-	panel.add_theme_stylebox_override("panel", sb)
-	return panel
-
-
-func _create_action_button(label: String, btn_size: Vector2, font: FontFile, border_color: Color = Color(1, 1, 1, 0.9)) -> Button:
+func _make_button(label: String, diameter: int, font: FontFile, border_color: Color) -> Button:
 	var btn := Button.new()
 	btn.text = label
-	btn.custom_minimum_size = btn_size
-	btn.size = btn_size
-	btn.pivot_offset = btn_size * 0.5
+	btn.focus_mode = Control.FOCUS_NONE
+	btn.custom_minimum_size = Vector2(diameter, diameter)
+	btn.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	btn.size_flags_vertical   = Control.SIZE_SHRINK_CENTER
 
 	if font:
 		btn.add_theme_font_override("font", font)
-		btn.add_theme_font_size_override("font_size", 16 if label.length() > 3 else 20)
-
+		var fs := 18 if label.length() > 3 else 22
+		btn.add_theme_font_size_override("font_size", fs)
 	btn.add_theme_color_override("font_color", Color(1, 1, 1, 1))
 
-	var normal := StyleBoxFlat.new()
-	normal.bg_color = Color(0, 0, 0, 0.65)
-	normal.set_corner_radius_all(int(min(btn_size.x, btn_size.y) * 0.5))
-	normal.set_border_width_all(2)
-	normal.border_color = border_color
+	var radius := int(diameter * 0.5)
 
-	var pressed := StyleBoxFlat.new()
-	pressed.bg_color = Color(0.25, 0.25, 0.25, 0.9)
-	pressed.set_corner_radius_all(int(min(btn_size.x, btn_size.y) * 0.5))
-	pressed.set_border_width_all(3)
-	pressed.border_color = Color(1, 1, 1, 1)
+	var sb_normal := StyleBoxFlat.new()
+	sb_normal.bg_color     = Color(0, 0, 0, 0.50)
+	sb_normal.border_color = border_color
+	sb_normal.set_corner_radius_all(radius)
+	sb_normal.set_border_width_all(2)
 
-	btn.add_theme_stylebox_override("normal", normal)
-	btn.add_theme_stylebox_override("pressed", pressed)
-	btn.add_theme_stylebox_override("hover", normal)
-	btn.add_theme_stylebox_override("focus", StyleBoxEmpty.new())
+	var sb_pressed := StyleBoxFlat.new()
+	sb_pressed.bg_color     = Color(0.2, 0.2, 0.2, 0.85)
+	sb_pressed.border_color = Color(1, 1, 1, 1)
+	sb_pressed.set_corner_radius_all(radius)
+	sb_pressed.set_border_width_all(3)
+
+	var sb_empty := StyleBoxEmpty.new()
+	btn.add_theme_stylebox_override("normal",   sb_normal)
+	btn.add_theme_stylebox_override("hover",    sb_normal)
+	btn.add_theme_stylebox_override("pressed",  sb_pressed)
+	btn.add_theme_stylebox_override("focus",    sb_empty)
+	btn.add_theme_stylebox_override("disabled", sb_empty)
 	return btn
 
 
+func _load_font() -> FontFile:
+	var f := load("res://fonts/Rajdhani-SemiBold.ttf") as FontFile
+	if not f:
+		f = load("res://font/Rajdhani-SemiBold.ttf") as FontFile
+	return f
+
+
 # ==============================================================================
-# INPUT HANDLING (Touch Screen events)
+# INPUT — Swipe-to-look on right half of screen
 # ==============================================================================
 
 func _input(event: InputEvent) -> void:
-	if not visible:
+	if not _canvas_layer.visible:
 		return
-
-	var vp_size := get_viewport().get_visible_rect().size
-	var half_screen_x := vp_size.x * 0.5
-
-	# ── TOUCH DOWN ────────────────────────────────────────────────────────────
-	if event is InputEventScreenTouch and event.pressed:
-		var touch_ev := event as InputEventScreenTouch
-		var pos: Vector2 = touch_ev.position
-
-		# Check if touch is on action buttons
-		if _is_pos_inside_control(_btn_jump, pos) or \
-				_is_pos_inside_control(_btn_slide, pos) or \
-				_is_pos_inside_control(_btn_use, pos) or \
-				_is_pos_inside_control(_btn_pause, pos):
-			return  # Let buttons consume the touch
-
-		# Left half of screen -> Joystick
-		if pos.x < half_screen_x:
-			if not _joystick_active:
-				_joystick_active = true
-				_joystick_touch_id = touch_ev.index
-				_joystick_center = pos
-				_joystick_current = pos
-				_joystick_base.global_position = _joystick_center - _joystick_base.size * 0.5
-				_joystick_knob.position = (_joystick_base.size - _joystick_knob.size) * 0.5
-				_joystick_base.visible = true
-				_update_joystick_vector()
-		# Right half of screen -> Look Drag
-		else:
-			if _look_touch_id == -1:
-				_look_touch_id = touch_ev.index
-				_look_last_pos = pos
-
-	# ── TOUCH UP ──────────────────────────────────────────────────────────────
-	elif event is InputEventScreenTouch and not event.pressed:
-		var touch_ev := event as InputEventScreenTouch
-		if touch_ev.index == _joystick_touch_id:
-			_release_joystick()
-		elif touch_ev.index == _look_touch_id:
-			_look_touch_id = -1
-
-	# ── DRAG ──────────────────────────────────────────────────────────────────
-	elif event is InputEventScreenDrag:
-		var drag_ev := event as InputEventScreenDrag
-		if drag_ev.index == _joystick_touch_id:
-			_joystick_current = drag_ev.position
-			_update_joystick_vector()
-		elif drag_ev.index == _look_touch_id:
-			var delta_pos: Vector2 = drag_ev.relative
-			_apply_look(delta_pos)
-
-
-func _is_pos_inside_control(ctrl: Control, pos: Vector2) -> bool:
-	if not ctrl or not ctrl.is_visible_in_tree():
-		return false
-	return ctrl.get_global_rect().has_point(pos)
-
-
-func _update_joystick_vector() -> void:
-	var diff := _joystick_current - _joystick_center
-	var dist := diff.length()
-
-	if dist > joystick_radius:
-		diff = diff.normalized() * joystick_radius
-
-	# Update knob visual offset
-	var center_knob_offset := (_joystick_base.size - _joystick_knob.size) * 0.5
-	_joystick_knob.position = center_knob_offset + diff
-
-	# Normalized output (-1 to 1)
-	_joystick_dir = diff / joystick_radius if joystick_radius > 0.0 else Vector2.ZERO
-
-	# Auto sprint when pushed hard
-	var strength := _joystick_dir.length()
-	if strength >= auto_sprint_threshold and not _is_sprinting:
-		_is_sprinting = true
-		Input.action_press("sprint", 1.0)
-	elif strength < auto_sprint_threshold and _is_sprinting:
-		_is_sprinting = false
-		Input.action_release("sprint")
-
-	# Dispatch movement actions with strength
-	_dispatch_action("move_right", max(0.0, _joystick_dir.x))
-	_dispatch_action("move_left", max(0.0, -_joystick_dir.x))
-	_dispatch_action("move_back", max(0.0, _joystick_dir.y))
-	_dispatch_action("move_forward", max(0.0, -_joystick_dir.y))
-
-
-func _dispatch_action(action_name: String, strength: float) -> void:
-	if strength > 0.15:
-		Input.action_press(action_name, strength)
-	else:
-		Input.action_release(action_name)
-
-
-func _release_joystick() -> void:
-	_joystick_active = false
-	_joystick_touch_id = -1
-	_joystick_dir = Vector2.ZERO
-	_joystick_base.visible = false
-	if _is_sprinting:
-		_is_sprinting = false
-		Input.action_release("sprint")
-	Input.action_release("move_forward")
-	Input.action_release("move_back")
-	Input.action_release("move_left")
-	Input.action_release("move_right")
-
-
-func _apply_look(delta_vec: Vector2) -> void:
 	if _player == null:
-		_setup_references()
-	if _player == null or not is_instance_valid(_player):
 		return
 	if _player.has_method("is_control_disabled") and _player.is_control_disabled():
 		return
 
-	_player.rotate_y(-delta_vec.x * touch_look_sensitivity)
+	var vp_half_x: float = get_viewport().get_visible_rect().size.x * 0.5
+
+	if event is InputEventScreenTouch:
+		var te := event as InputEventScreenTouch
+		if te.pressed:
+			# Only right-half touches that aren't on action buttons start a look drag
+			if te.position.x >= vp_half_x and _look_touch_id == -1:
+				if not _is_on_any_button(te.position):
+					_look_touch_id = te.index
+					_look_last_pos = te.position
+		else:
+			if te.index == _look_touch_id:
+				_look_touch_id = -1
+
+	elif event is InputEventScreenDrag:
+		var de := event as InputEventScreenDrag
+		if de.index == _look_touch_id:
+			_apply_look(de.relative)
+
+
+func _is_on_any_button(pos: Vector2) -> bool:
+	for btn in [_btn_jump, _btn_slide, _btn_use, _btn_pause]:
+		if btn and btn.is_visible_in_tree() and btn.get_global_rect().has_point(pos):
+			return true
+	return false
+
+
+func _apply_look(delta: Vector2) -> void:
+	if not is_instance_valid(_player):
+		return
+	_player.rotate_y(-delta.x * LOOK_SENSITIVITY)
 	if _head and is_instance_valid(_head):
-		_head.rotate_x(-delta_vec.y * touch_look_sensitivity)
-		_head.rotation.x = clamp(_head.rotation.x, deg_to_rad(-80), deg_to_rad(80))
+		_head.rotate_x(-delta.y * LOOK_SENSITIVITY)
+		_head.rotation.x = clamp(_head.rotation.x, deg_to_rad(-80.0), deg_to_rad(80.0))
 
 
 # ==============================================================================
-# BUTTON CALLBACKS
+# CALLBACKS
 # ==============================================================================
-
-func _on_jump_down() -> void:
-	Input.action_press("jump", 1.0)
-
-
-func _on_jump_up() -> void:
-	Input.action_release("jump")
-
-
-func _on_slide_down() -> void:
-	Input.action_press("crouch", 1.0)
-
-
-func _on_slide_up() -> void:
-	Input.action_release("crouch")
-
-
-func _on_use_down() -> void:
-	Input.action_press("interact", 1.0)
-
-
-func _on_use_up() -> void:
-	Input.action_release("interact")
-
 
 func _on_pause_pressed() -> void:
 	if _game_ui == null:
 		_setup_references()
 	if _game_ui and _game_ui.has_method("toggle_pause"):
 		_game_ui.toggle_pause()
+
+
+# ==============================================================================
+# PROCESS — Keep joystick region synced to left half of screen
+# ==============================================================================
+
+func _process(_delta: float) -> void:
+	if _joystick == null or not is_instance_valid(_joystick):
+		return
+	var vp := get_viewport().get_visible_rect().size
+	_joystick.set("region_w", vp.x * 0.5)
+	_joystick.set("region_h", vp.y)
