@@ -1,0 +1,36 @@
+[gd_resource type="Theme" format=3 uid="uid://dieskda023ip1"]
+
+[ext_resource type="FontFile" uid="uid://c3rwer21tqist" path="res://fonts/Rajdhani-SemiBold.ttf" id="1_d1fqf"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_d1fqf"]
+content_margin_left = 2.0
+content_margin_top = 2.0
+content_margin_right = 2.0
+content_margin_bottom = 2.0
+bg_color = Color(0.1, 0.1, 0.1, 0.3)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+corner_detail = 6
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_2tm8u"]
+content_margin_left = 2.0
+content_margin_top = 2.0
+content_margin_right = 2.0
+content_margin_bottom = 2.0
+bg_color = Color(1, 1, 1, 1)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+corner_detail = 6
+
+[resource]
+ProgressBar/colors/font_color = Color(0.95, 0.95, 0.95, 1)
+ProgressBar/colors/font_outline_color = Color(0, 0, 0, 1)
+ProgressBar/constants/outline_size = 0
+ProgressBar/font_sizes/font_size = 16
+ProgressBar/fonts/font = ExtResource("1_d1fqf")
+ProgressBar/styles/background = SubResource("StyleBoxFlat_d1fqf")
+ProgressBar/styles/fill = SubResource("StyleBoxFlat_2tm8u")

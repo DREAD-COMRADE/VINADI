@@ -1,0 +1,335 @@
+[gd_scene format=3 uid="uid://dbvrhlj7jaua"]
+
+[ext_resource type="Script" uid="uid://w5vl276y5lyi" path="res://ui/ui_preview.gd" id="1_prev_script"]
+[ext_resource type="Script" uid="uid://dwmc4h5ohjgw2" path="res://ui/ui.gd" id="3_ecn3u"]
+[ext_resource type="FontFile" uid="uid://c3rwer21tqist" path="res://fonts/Rajdhani-SemiBold.ttf" id="3_font"]
+[ext_resource type="Texture2D" uid="uid://ceffopn05w5iw" path="res://assets/UI/White Gas Mask Emblem.png" id="4_sd78w"]
+
+[sub_resource type="Gradient" id="Gradient_bg"]
+colors = PackedColorArray(0.06, 0.08, 0.1, 1, 0.12, 0.15, 0.18, 1)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_mock_gameplay"]
+gradient = SubResource("Gradient_bg")
+fill_from = Vector2(0.5, 1)
+fill_to = Vector2(0.5, 0)
+
+[sub_resource type="StyleBoxFlat" id="SB_panel_dark"]
+content_margin_left = 14.0
+content_margin_top = 8.0
+content_margin_right = 14.0
+content_margin_bottom = 8.0
+bg_color = Color(0.04, 0.05, 0.07, 0.78)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(1, 1, 1, 0.12)
+corner_radius_top_left = 3
+corner_radius_top_right = 3
+corner_radius_bottom_right = 3
+corner_radius_bottom_left = 3
+
+[sub_resource type="StyleBoxFlat" id="SB_bar_bg"]
+bg_color = Color(0.12, 0.14, 0.18, 0.85)
+corner_radius_top_left = 2
+corner_radius_top_right = 2
+corner_radius_bottom_right = 2
+corner_radius_bottom_left = 2
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_dfls7"]
+bg_color = Color(1, 1, 1, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_48qgc"]
+bg_color = Color(1, 1, 1, 1)
+
+[sub_resource type="StyleBoxFlat" id="SB_info_bar"]
+content_margin_left = 12.0
+content_margin_top = 6.0
+content_margin_right = 12.0
+content_margin_bottom = 6.0
+bg_color = Color(0.02, 0.03, 0.05, 0.9)
+border_width_top = 1
+border_color = Color(1, 1, 1, 0.15)
+
+[node name="UIPreview" type="Control" unique_id=31822886]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_prev_script")
+
+[node name="Mock3DBackground" type="TextureRect" parent="." unique_id=1377221725]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = SubResource("GradientTexture2D_mock_gameplay")
+
+[node name="MockCrosshairTarget" type="Label" parent="Mock3DBackground" unique_id=1489766444]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -100.0
+offset_top = -60.0
+offset_right = 100.0
+offset_bottom = -30.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(1, 1, 1, 0.25)
+theme_override_fonts/font = ExtResource("3_font")
+theme_override_font_sizes/font_size = 14
+text = "[ MOCK 3D VIEWPORT ]"
+horizontal_alignment = 1
+
+[node name="UI" type="CanvasLayer" parent="." unique_id=851162394]
+layer = 5
+script = ExtResource("3_ecn3u")
+
+[node name="HUDContainer" type="Control" parent="UI" unique_id=466025536]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="ObjectivePanel" type="PanelContainer" parent="UI/HUDContainer" unique_id=1851644635]
+unique_name_in_owner = true
+layout_mode = 1
+offset_left = 36.0
+offset_top = 28.0
+offset_right = 410.0
+offset_bottom = 90.0
+theme_override_styles/panel = SubResource("SB_panel_dark")
+
+[node name="VBox" type="VBoxContainer" parent="UI/HUDContainer/ObjectivePanel" unique_id=1310609825]
+layout_mode = 2
+theme_override_constants/separation = 2
+
+[node name="ObjectiveHeading" type="Label" parent="UI/HUDContainer/ObjectivePanel/VBox" unique_id=1606880877]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 0.8509804)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.75)
+theme_override_constants/shadow_offset_x = 1
+theme_override_constants/shadow_offset_y = 1
+theme_override_fonts/font = ExtResource("3_font")
+theme_override_font_sizes/font_size = 12
+text = "OBJECTIVE :"
+
+[node name="ObjectiveLabel" type="Label" parent="UI/HUDContainer/ObjectivePanel/VBox" unique_id=205286018]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 0.98)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.85)
+theme_override_constants/shadow_offset_x = 1
+theme_override_constants/shadow_offset_y = 1
+theme_override_fonts/font = ExtResource("3_font")
+theme_override_font_sizes/font_size = 18
+text = "EVACUATE TO DECONTAMINATION CHAMBER"
+
+[node name="CountdownPanel" type="PanelContainer" parent="UI/HUDContainer" unique_id=1073469430]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -266.0
+offset_top = 37.0
+offset_right = -37.0
+offset_bottom = 132.0
+grow_horizontal = 0
+theme_override_styles/panel = SubResource("SB_panel_dark")
+
+[node name="VBox" type="VBoxContainer" parent="UI/HUDContainer/CountdownPanel" unique_id=1405706376]
+layout_mode = 2
+theme_override_constants/separation = 4
+alignment = 1
+
+[node name="CountdownHeading" type="Label" parent="UI/HUDContainer/CountdownPanel/VBox" unique_id=117756614]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.72, 0.75, 0.8, 0.8)
+theme_override_fonts/font = ExtResource("3_font")
+theme_override_font_sizes/font_size = 11
+text = "TIME REMAINING"
+horizontal_alignment = 1
+
+[node name="TimerDigits" type="Label" parent="UI/HUDContainer/CountdownPanel/VBox" unique_id=440429528]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.85)
+theme_override_constants/shadow_offset_x = 1
+theme_override_constants/shadow_offset_y = 1
+theme_override_fonts/font = ExtResource("3_font")
+theme_override_font_sizes/font_size = 40
+text = "20.00 SEC"
+horizontal_alignment = 1
+
+[node name="TimerBar" type="ProgressBar" parent="UI/HUDContainer/CountdownPanel/VBox" unique_id=514463619]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 4)
+layout_mode = 2
+theme_override_styles/background = SubResource("SB_bar_bg")
+theme_override_styles/fill = SubResource("StyleBoxFlat_dfls7")
+max_value = 20.0
+value = 20.0
+show_percentage = false
+
+[node name="ContaminationPanel" type="PanelContainer" parent="UI/HUDContainer" unique_id=977066128]
+unique_name_in_owner = true
+layout_mode = 1
+offset_left = 44.000004
+offset_top = 556.99994
+offset_right = 216.0
+offset_bottom = 600.99994
+rotation = -0.0032963378
+theme_override_styles/panel = SubResource("SB_panel_dark")
+
+[node name="HBox" type="HBoxContainer" parent="UI/HUDContainer/ContaminationPanel" unique_id=1879242872]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="MaskIcon" type="TextureRect" parent="UI/HUDContainer/ContaminationPanel/HBox" unique_id=1940566543]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(28, 28)
+layout_mode = 2
+size_flags_vertical = 4
+texture = ExtResource("4_sd78w")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="BarVBox" type="VBoxContainer" parent="UI/HUDContainer/ContaminationPanel/HBox" unique_id=1614454038]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 3
+alignment = 1
+
+[node name="HeaderRow" type="HBoxContainer" parent="UI/HUDContainer/ContaminationPanel/HBox/BarVBox" unique_id=1734200210]
+layout_mode = 2
+
+[node name="ContamTitle" type="Label" parent="UI/HUDContainer/ContaminationPanel/HBox/BarVBox/HeaderRow" unique_id=1358123401]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.72, 0.75, 0.8, 0.8)
+theme_override_fonts/font = ExtResource("3_font")
+theme_override_font_sizes/font_size = 11
+text = "FILTER INTEGRITY"
+
+[node name="ContaminationPercentLabel" type="Label" parent="UI/HUDContainer/ContaminationPanel/HBox/BarVBox/HeaderRow" unique_id=1168588191]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 0.95)
+theme_override_fonts/font = ExtResource("3_font")
+theme_override_font_sizes/font_size = 12
+text = "100%"
+horizontal_alignment = 2
+
+[node name="ContaminationBar" type="ProgressBar" parent="UI/HUDContainer/ContaminationPanel/HBox/BarVBox" unique_id=1577986658]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 6)
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_styles/background = SubResource("SB_bar_bg")
+theme_override_styles/fill = SubResource("StyleBoxFlat_48qgc")
+value = 100.0
+show_percentage = false
+
+[node name="MovementHints" type="VBoxContainer" parent="UI/HUDContainer" unique_id=584539785]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 6
+anchor_left = 1.0
+anchor_top = 0.5
+anchor_right = 1.0
+anchor_bottom = 0.5
+offset_left = -220.0
+offset_top = 124.0
+offset_right = -39.0
+offset_bottom = 229.0
+grow_horizontal = 0
+grow_vertical = 2
+theme_override_constants/separation = 6
+alignment = 1
+
+[node name="HintSprint" type="Label" parent="UI/HUDContainer/MovementHints" unique_id=2013556208]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.9411765, 0.5411765, 0, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.75)
+theme_override_constants/shadow_offset_x = 1
+theme_override_constants/shadow_offset_y = 1
+theme_override_fonts/font = ExtResource("3_font")
+theme_override_font_sizes/font_size = 15
+text = "SHIFT — SPRINT"
+horizontal_alignment = 2
+
+[node name="HintJump" type="Label" parent="UI/HUDContainer/MovementHints" unique_id=366578002]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.9411765, 0.5411765, 0, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.75)
+theme_override_constants/shadow_offset_x = 1
+theme_override_constants/shadow_offset_y = 1
+theme_override_fonts/font = ExtResource("3_font")
+theme_override_font_sizes/font_size = 15
+text = "SPACE — JUMP"
+horizontal_alignment = 2
+
+[node name="HintSlide" type="Label" parent="UI/HUDContainer/MovementHints" unique_id=1788267518]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.9411765, 0.5411765, 0, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.75)
+theme_override_constants/shadow_offset_x = 1
+theme_override_constants/shadow_offset_y = 1
+theme_override_fonts/font = ExtResource("3_font")
+theme_override_font_sizes/font_size = 15
+text = "CTRL — CROUCH / SLIDE"
+horizontal_alignment = 2
+
+[node name="CrosshairDot" type="ColorRect" parent="UI/HUDContainer" unique_id=1275321060]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(3, 3)
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -1.5
+offset_top = -1.5
+offset_right = 1.5
+offset_bottom = 1.5
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(1, 1, 1, 0.9)
+
+[node name="PreviewFooter" type="PanelContainer" parent="." unique_id=1423427424]
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -34.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_styles/panel = SubResource("SB_info_bar")
+
+[node name="SimInfo" type="Label" parent="PreviewFooter" unique_id=550537531]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.48, 0.72, 1, 0.9)
+theme_override_fonts/font = ExtResource("3_font")
+theme_override_font_sizes/font_size = 13
+text = "HUD PREVIEW HARNESS"
+horizontal_alignment = 1

@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://vinadi_player_start"]
+
+[ext_resource type="Script" path="res://objects/player_start.gd" id="1_start"]
+
+[node name="PlayerStart" type="Marker3D"]
+script = ExtResource("1_start")

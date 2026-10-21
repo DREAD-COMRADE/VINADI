@@ -1,0 +1,27 @@
+[gd_scene format=3 uid="uid://dhgn684y0fc3e"]
+
+[ext_resource type="Script" uid="uid://dxktwfcuqo0tu" path="res://player/player.gd" id="1_player"]
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_player"]
+radius = 0.35
+height = 1.8
+
+[node name="Player" type="CharacterBody3D" unique_id=1585253277]
+script = ExtResource("1_player")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=1489077602 groups=["player"]]
+unique_name_in_owner = true
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
+shape = SubResource("CapsuleShape3D_player")
+
+[node name="Head" type="Node3D" parent="CollisionShape3D" unique_id=1819293213]
+unique_name_in_owner = true
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.8, 0)
+
+[node name="Camera3D" type="Camera3D" parent="CollisionShape3D/Head" unique_id=2058489164]
+unique_name_in_owner = true
+current = true
+
+[node name="AudioListener3D" type="AudioListener3D" parent="CollisionShape3D/Head/Camera3D" unique_id=673282695]
+unique_name_in_owner = true
+current = true

@@ -6,9 +6,9 @@ A 20-second game jam project built in Godot 4.
 Evacuate to the decontamination chamber before the 20-second quarantine protocol timer expires.
 
 ## Controls
-- WASD: Move
-- Shift: Sprint
-- Space: Jump
-- Ctrl: Crouch / Slide
-- E: Interact / Decontaminate
-- Escape: Pause menu
+- WASD / Virtual Joystick: Move
+- Shift / Stick-Push: Sprint
+- Space / Touch Jump: Jump
+- Ctrl / Touch Slide: Crouch / Slide
+- E / Click / Touch Use: Interact / Decontaminate
+- Escape / Touch Pause: Pause menu

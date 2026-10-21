@@ -1,0 +1,256 @@
+[gd_scene format=3 uid="uid://vinadi_hud_main"]
+
+[ext_resource type="Script" uid="uid://dwmc4h5ohjgw2" path="res://ui/ui.gd" id="1_hud_script"]
+[ext_resource type="FontFile" uid="uid://c3rwer21tqist" path="res://fonts/Rajdhani-SemiBold.ttf" id="2_font"]
+[ext_resource type="Texture2D" uid="uid://dg76w508jkglh" path="res://ui/gas_mask_icon.svg" id="3_mask_icon"]
+[ext_resource type="Texture2D" uid="uid://dljyhngx4oi5d" path="res://assets/UI/ui_bg.png" id="4_ui_bg"]
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_ui_bg"]
+texture = ExtResource("4_ui_bg")
+texture_margin_left = 8.0
+texture_margin_top = 8.0
+texture_margin_right = 8.0
+texture_margin_bottom = 8.0
+content_margin_left = 14.0
+content_margin_top = 10.0
+content_margin_right = 14.0
+content_margin_bottom = 10.0
+
+[sub_resource type="StyleBoxFlat" id="SB_bar_bg"]
+bg_color = Color(0.12, 0.14, 0.18, 0.85)
+corner_radius_top_left = 2
+corner_radius_top_right = 2
+corner_radius_bottom_right = 2
+corner_radius_bottom_left = 2
+
+[sub_resource type="StyleBoxFlat" id="SB_bar_fill_blue"]
+bg_color = Color(0.24, 0.65, 1, 0.95)
+corner_radius_top_left = 2
+corner_radius_top_right = 2
+corner_radius_bottom_right = 2
+corner_radius_bottom_left = 2
+
+[node name="UI" type="CanvasLayer"]
+layer = 5
+script = ExtResource("1_hud_script")
+
+[node name="HUDContainer" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="ObjectivePanel" type="PanelContainer" parent="HUDContainer"]
+unique_name_in_owner = true
+layout_mode = 1
+offset_left = 36.0
+offset_top = 28.0
+offset_right = 410.0
+offset_bottom = 90.0
+theme_override_styles/panel = SubResource("StyleBoxTexture_ui_bg")
+
+[node name="VBox" type="VBoxContainer" parent="HUDContainer/ObjectivePanel"]
+layout_mode = 2
+theme_override_constants/separation = 2
+
+[node name="ObjectiveHeading" type="Label" parent="HUDContainer/ObjectivePanel/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.48, 0.72, 1, 0.85)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.75)
+theme_override_constants/shadow_offset_x = 1
+theme_override_constants/shadow_offset_y = 1
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 12
+text = "OBJECTIVE  • ────────"
+
+[node name="ObjectiveLabel" type="Label" parent="HUDContainer/ObjectivePanel/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 0.98)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.85)
+theme_override_constants/shadow_offset_x = 1
+theme_override_constants/shadow_offset_y = 1
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 18
+text = "EVACUATE TO DECONTAMINATION CHAMBER"
+
+[node name="CountdownPanel" type="PanelContainer" parent="HUDContainer"]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -276.0
+offset_top = 28.0
+offset_right = -36.0
+offset_bottom = 120.0
+grow_horizontal = 0
+theme_override_styles/panel = SubResource("StyleBoxTexture_ui_bg")
+
+[node name="VBox" type="VBoxContainer" parent="HUDContainer/CountdownPanel"]
+layout_mode = 2
+theme_override_constants/separation = 4
+alignment = 1
+
+[node name="CountdownHeading" type="Label" parent="HUDContainer/CountdownPanel/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.72, 0.75, 0.8, 0.8)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 11
+text = "TIME REMAINING"
+horizontal_alignment = 1
+
+[node name="TimerDigits" type="Label" parent="HUDContainer/CountdownPanel/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.85)
+theme_override_constants/shadow_offset_x = 1
+theme_override_constants/shadow_offset_y = 1
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 40
+text = "20.00 SEC"
+horizontal_alignment = 1
+
+[node name="TimerBar" type="ProgressBar" parent="HUDContainer/CountdownPanel/VBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 4)
+layout_mode = 2
+theme_override_styles/background = SubResource("SB_bar_bg")
+theme_override_styles/fill = SubResource("SB_bar_fill_blue")
+max_value = 20.0
+value = 20.0
+show_percentage = false
+
+[node name="ContaminationPanel" type="PanelContainer" parent="HUDContainer"]
+unique_name_in_owner = true
+layout_mode = 1
+offset_left = 36.0
+offset_top = 104.0
+offset_right = 320.0
+offset_bottom = 152.0
+theme_override_styles/panel = SubResource("StyleBoxTexture_ui_bg")
+
+[node name="HBox" type="HBoxContainer" parent="HUDContainer/ContaminationPanel"]
+layout_mode = 2
+theme_override_constants/separation = 10
+alignment = 0
+
+[node name="MaskIcon" type="TextureRect" parent="HUDContainer/ContaminationPanel/HBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(28, 28)
+layout_mode = 2
+size_flags_vertical = 4
+texture = ExtResource("3_mask_icon")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="BarVBox" type="VBoxContainer" parent="HUDContainer/ContaminationPanel/HBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 3
+alignment = 1
+
+[node name="HeaderRow" type="HBoxContainer" parent="HUDContainer/ContaminationPanel/HBox/BarVBox"]
+layout_mode = 2
+
+[node name="ContamTitle" type="Label" parent="HUDContainer/ContaminationPanel/HBox/BarVBox/HeaderRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.72, 0.75, 0.8, 0.8)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 11
+text = "FILTER INTEGRITY"
+
+[node name="ContaminationPercentLabel" type="Label" parent="HUDContainer/ContaminationPanel/HBox/BarVBox/HeaderRow"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 0.95)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 12
+text = "100%"
+horizontal_alignment = 2
+
+[node name="ContaminationBar" type="ProgressBar" parent="HUDContainer/ContaminationPanel/HBox/BarVBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 6)
+layout_mode = 2
+theme_override_styles/background = SubResource("SB_bar_bg")
+theme_override_styles/fill = SubResource("SB_bar_fill_blue")
+value = 100.0
+show_percentage = false
+
+[node name="MovementHints" type="VBoxContainer" parent="HUDContainer"]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 6
+anchor_left = 1.0
+anchor_top = 0.5
+anchor_right = 1.0
+anchor_bottom = 0.5
+offset_left = -220.0
+offset_top = 30.0
+offset_right = -36.0
+offset_bottom = 126.0
+grow_horizontal = 0
+grow_vertical = 2
+theme_override_constants/separation = 6
+alignment = 1
+
+[node name="HintSprint" type="Label" parent="HUDContainer/MovementHints"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 0.72)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.75)
+theme_override_constants/shadow_offset_x = 1
+theme_override_constants/shadow_offset_y = 1
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 15
+text = "SHIFT — SPRINT"
+horizontal_alignment = 2
+
+[node name="HintJump" type="Label" parent="HUDContainer/MovementHints"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 0.72)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.75)
+theme_override_constants/shadow_offset_x = 1
+theme_override_constants/shadow_offset_y = 1
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 15
+text = "SPACE — JUMP"
+horizontal_alignment = 2
+
+[node name="HintSlide" type="Label" parent="HUDContainer/MovementHints"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 0.72)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.75)
+theme_override_constants/shadow_offset_x = 1
+theme_override_constants/shadow_offset_y = 1
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 15
+text = "CTRL — CROUCH / SLIDE"
+horizontal_alignment = 2
+
+[node name="CrosshairDot" type="ColorRect" parent="HUDContainer"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(3, 3)
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -1.5
+offset_top = -1.5
+offset_right = 1.5
+offset_bottom = 1.5
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(1, 1, 1, 0.9)
