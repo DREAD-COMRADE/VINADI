@@ -3,3 +3,8 @@
 /android/
 
 *.tmp
+
+# Build artifacts - never commit these
+*.apk
+*.idsig
+*.aab
