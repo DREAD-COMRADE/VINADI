@@ -1,0 +1,8 @@
+[gd_scene format=3 uid="uid://vinadi_touch_controls"]
+
+[ext_resource type="Script" path="res://ui/touch_controls.gd" id="1_touch"]
+
+[node name="TouchControls" type="CanvasLayer"]
+process_mode = 3
+layer = 8
+script = ExtResource("1_touch")

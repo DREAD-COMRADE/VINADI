@@ -13,6 +13,7 @@
 [ext_resource type="Texture2D" uid="uid://ceffopn05w5iw" path="res://assets/UI/White Gas Mask Emblem.png" id="9_ov2xu"]
 [ext_resource type="Texture2D" uid="uid://dgj5lritniyv6" path="res://assets/UI/futuristic-scifi-metal-panel-texture-260nw-2792936327.jpg" id="11_mad0u"]
 [ext_resource type="AudioStream" uid="uid://by7ciffllx0yc" path="res://assets/VINADI_theme.wav" id="12_music"]
+[ext_resource type="PackedScene" path="res://ui/touch_controls.tscn" id="13_touch"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_6xmxd"]
 sky_horizon_color = Color(0.66224277, 0.6717428, 0.6867428, 1)
@@ -295,6 +296,8 @@ color = Color(1, 1, 1, 0.9)
 
 [node name="GameUI" type="CanvasLayer" parent="." unique_id=89863119]
 script = ExtResource("3_game_ui")
+
+[node name="TouchControls" parent="." unique_id=1847291035 instance=ExtResource("13_touch")]
 
 [node name="DebugPanel" type="CanvasLayer" parent="." unique_id=1837322482]
 script = ExtResource("4_debug_panel")
