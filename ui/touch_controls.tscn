@@ -1,7 +1,252 @@
 [gd_scene format=3 uid="uid://vinadi_touch_controls"]
 
 [ext_resource type="Script" path="res://ui/touch_controls.gd" id="1_touch"]
+[ext_resource type="Script" path="res://addons/virtual_joystick_DX/vjdx_core_script.gd" id="2_vjdx"]
+[ext_resource type="FontFile" uid="uid://c3rwer21tqist" path="res://fonts/Rajdhani-SemiBold.ttf" id="3_font"]
 
-[node name="TouchControls" type="Node3D"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_btn_normal"]
+bg_color = Color(0, 0, 0, 0.5)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(1, 1, 1, 0.9)
+corner_radius_top_left = 45
+corner_radius_top_right = 45
+corner_radius_bottom_right = 45
+corner_radius_bottom_left = 45
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_btn_pressed"]
+bg_color = Color(0.2, 0.2, 0.2, 0.85)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(1, 1, 1, 1)
+corner_radius_top_left = 45
+corner_radius_top_right = 45
+corner_radius_bottom_right = 45
+corner_radius_bottom_left = 45
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_focus"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_use_normal"]
+bg_color = Color(0, 0, 0, 0.5)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.12, 1, 0.5, 0.95)
+corner_radius_top_left = 45
+corner_radius_top_right = 45
+corner_radius_bottom_right = 45
+corner_radius_bottom_left = 45
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_use_pressed"]
+bg_color = Color(0.05, 0.25, 0.12, 0.85)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(0.2, 1, 0.6, 1)
+corner_radius_top_left = 45
+corner_radius_top_right = 45
+corner_radius_bottom_right = 45
+corner_radius_bottom_left = 45
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_pause_normal"]
+bg_color = Color(0, 0, 0, 0.5)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(1, 1, 1, 0.85)
+corner_radius_top_left = 22
+corner_radius_top_right = 22
+corner_radius_bottom_right = 22
+corner_radius_bottom_left = 22
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_pause_pressed"]
+bg_color = Color(0.25, 0.25, 0.25, 0.85)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(1, 1, 1, 1)
+corner_radius_top_left = 22
+corner_radius_top_right = 22
+corner_radius_bottom_right = 22
+corner_radius_bottom_left = 22
+
+[node name="TouchControls" type="CanvasLayer"]
 process_mode = 3
+layer = 8
 script = ExtResource("1_touch")
+
+[node name="TouchRoot" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="LookArea" type="Control" parent="TouchRoot"]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="MoveJoystick" type="Control" parent="TouchRoot"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(180, 180)
+layout_mode = 1
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 70.0
+offset_top = -250.0
+offset_right = 250.0
+offset_bottom = -70.0
+grow_vertical = 0
+script = ExtResource("2_vjdx")
+joystick_radius = 90.0
+thumb_radius = 30.0
+deadzone = 0.12
+debug_deadzone = false
+deadzone_color = Color(0.913725, 0.239216, 0.239216, 1)
+haptic_joystick_press_amplitude = 0.4
+haptic_joystick_release_duration = 20
+haptic_joystick_release_amplitude = 0.25
+haptic_dpad_press_duration = 25
+haptic_dpad_press_amplitude = 0.4
+haptic_dpad_release_duration = 20
+haptic_dpad_release_amplitude = 0.25
+haptic_dpad_change_duration = 18
+haptic_dpad_change_amplitude = 0.55
+joystick_mode = 1
+debug_clampzone = false
+clampzone_color = Color(0.913725, 0.909804, 0.239216, 0.741176)
+action_left = &"move_left"
+action_right = &"move_right"
+action_up = &"move_forward"
+action_down = &"move_back"
+debug_show_region = false
+debug_region_color = Color(0.239216, 0.913725, 0.462745, 0.741176)
+region_w = 640.0
+region_h = 720.0
+color_js_base = Color(0, 0, 0, 0.45)
+color_js_border = Color(1, 1, 1, 0.7)
+color_js_thumb = Color(1, 1, 1, 0.65)
+color_js_thumb_active = Color(0.12, 1, 0.5, 0.9)
+
+[node name="Buttons" type="Control" parent="TouchRoot"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="JumpButton" type="Button" parent="TouchRoot/Buttons"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(88, 88)
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -133.0
+offset_top = -138.0
+offset_right = -45.0
+offset_bottom = -50.0
+grow_horizontal = 0
+grow_vertical = 0
+focus_mode = 0
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_fonts/font = ExtResource("3_font")
+theme_override_font_sizes/font_size = 20
+theme_override_styles/normal = SubResource("StyleBoxFlat_btn_normal")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_btn_pressed")
+theme_override_styles/hover = SubResource("StyleBoxFlat_btn_normal")
+theme_override_styles/focus = SubResource("StyleBoxEmpty_focus")
+text = "JUMP"
+
+[node name="SlideButton" type="Button" parent="TouchRoot/Buttons"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(74, 74)
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -222.0
+offset_top = -131.0
+offset_right = -148.0
+offset_bottom = -57.0
+grow_horizontal = 0
+grow_vertical = 0
+focus_mode = 0
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_fonts/font = ExtResource("3_font")
+theme_override_font_sizes/font_size = 18
+theme_override_styles/normal = SubResource("StyleBoxFlat_btn_normal")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_btn_pressed")
+theme_override_styles/hover = SubResource("StyleBoxFlat_btn_normal")
+theme_override_styles/focus = SubResource("StyleBoxEmpty_focus")
+text = "SLIDE"
+
+[node name="UseButton" type="Button" parent="TouchRoot/Buttons"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(78, 78)
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -128.0
+offset_top = -233.0
+offset_right = -50.0
+offset_bottom = -155.0
+grow_horizontal = 0
+grow_vertical = 0
+focus_mode = 0
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_fonts/font = ExtResource("3_font")
+theme_override_font_sizes/font_size = 20
+theme_override_styles/normal = SubResource("StyleBoxFlat_use_normal")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_use_pressed")
+theme_override_styles/hover = SubResource("StyleBoxFlat_use_normal")
+theme_override_styles/focus = SubResource("StyleBoxEmpty_focus")
+text = "USE"
+
+[node name="PauseButton" type="Button" parent="TouchRoot/Buttons"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(44, 44)
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -68.0
+offset_top = 24.0
+offset_right = -24.0
+offset_bottom = 68.0
+grow_horizontal = 0
+focus_mode = 0
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_fonts/font = ExtResource("3_font")
+theme_override_font_sizes/font_size = 20
+theme_override_styles/normal = SubResource("StyleBoxFlat_pause_normal")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_pause_pressed")
+theme_override_styles/hover = SubResource("StyleBoxFlat_pause_normal")
+theme_override_styles/focus = SubResource("StyleBoxEmpty_focus")
+text = "||"
