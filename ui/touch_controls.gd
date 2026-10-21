@@ -22,15 +22,18 @@ var _game_ui = null
 
 # Look sensitivity — standard for mobile FPS swipe look
 @export var look_sensitivity: float = 0.0015
+@export var auto_sprint_threshold: float = 0.85
 
 # Swipe-to-look touch tracking
 var _look_touch_id: int = -1
+var _is_sprinting: bool = false
 
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	layer = 8
 	_connect_buttons()
+	_connect_joystick()
 	call_deferred("_setup_references")
 
 	# Auto-show on touchscreens, mobile devices, or when touch emulation is enabled
@@ -40,6 +43,12 @@ func _ready() -> void:
 		or OS.has_feature("ios") \
 		or ProjectSettings.get_setting("input_devices/pointing/emulate_touch_from_mouse", false)
 	visible = show_hud
+
+	# Keep joystick region updated when viewport/window size changes
+	var vp := get_viewport()
+	if vp:
+		vp.size_changed.connect(_update_joystick_region)
+		call_deferred("_update_joystick_region")
 
 
 func _setup_references() -> void:
@@ -54,6 +63,13 @@ func _setup_references() -> void:
 	var guis := get_tree().get_nodes_in_group("game_ui")
 	if guis.size() > 0:
 		_game_ui = guis[0]
+
+
+func _ensure_references() -> bool:
+	if _player and is_instance_valid(_player) and _head and is_instance_valid(_head):
+		return true
+	_setup_references()
+	return _player != null and is_instance_valid(_player)
 
 
 func _connect_buttons() -> void:
@@ -73,6 +89,30 @@ func _connect_buttons() -> void:
 		_btn_pause.pressed.connect(_on_pause_pressed)
 
 
+func _connect_joystick() -> void:
+	if _joystick:
+		if _joystick.has_signal("joystick_moved"):
+			_joystick.connect("joystick_moved", _on_joystick_moved)
+		if _joystick.has_signal("joystick_released"):
+			_joystick.connect("joystick_released", _on_joystick_released)
+
+
+func _on_joystick_moved(dir: Vector2) -> void:
+	# Auto-sprint when joystick pushed to outer rim
+	if dir.length() >= auto_sprint_threshold and not _is_sprinting:
+		_is_sprinting = true
+		Input.action_press("sprint", 1.0)
+	elif dir.length() < auto_sprint_threshold and _is_sprinting:
+		_is_sprinting = false
+		Input.action_release("sprint")
+
+
+func _on_joystick_released() -> void:
+	if _is_sprinting:
+		_is_sprinting = false
+		Input.action_release("sprint")
+
+
 func _on_pause_pressed() -> void:
 	if _game_ui == null:
 		_setup_references()
@@ -87,18 +127,16 @@ func _on_pause_pressed() -> void:
 func _input(event: InputEvent) -> void:
 	if not visible:
 		return
-	if _player == null:
+	if not _ensure_references():
 		return
 	if _player.has_method("is_control_disabled") and _player.is_control_disabled():
 		return
 
-	var vp_half_x: float = get_viewport().get_visible_rect().size.x * 0.45
-
 	if event is InputEventScreenTouch:
 		var te := event as InputEventScreenTouch
 		if te.pressed:
-			# Only touches that are on the right side and not on buttons start a look drag
-			if te.position.x >= vp_half_x and _look_touch_id == -1:
+			# Only touches within LookArea that are not on buttons start a look drag
+			if _look_touch_id == -1 and _is_in_look_area(te.position):
 				if not _is_on_any_button(te.position):
 					_look_touch_id = te.index
 		else:
@@ -111,28 +149,40 @@ func _input(event: InputEvent) -> void:
 			_apply_look(de.relative)
 
 
+func _is_in_look_area(pos: Vector2) -> bool:
+	if _look_area and is_instance_valid(_look_area) and _look_area.is_visible_in_tree():
+		return _look_area.get_global_rect().has_point(pos)
+	# Fallback if no specific look area defined: right half of viewport
+	var vp_size := get_viewport().get_visible_rect().size
+	return pos.x >= vp_size.x * 0.4
+
+
 func _is_on_any_button(pos: Vector2) -> bool:
 	for btn in [_btn_jump, _btn_slide, _btn_use, _btn_pause]:
-		if btn and btn.is_visible_in_tree() and btn.get_global_rect().has_point(pos):
+		if btn and is_instance_valid(btn) and btn.is_visible_in_tree() and btn.get_global_rect().has_point(pos):
 			return true
 	return false
 
 
 func _apply_look(delta: Vector2) -> void:
-	if not is_instance_valid(_player):
+	if not _ensure_references():
 		return
 	_player.rotate_y(-delta.x * look_sensitivity)
+	if "mouse_input" in _player:
+		_player.mouse_input = delta
 	if _head and is_instance_valid(_head):
 		_head.rotate_x(-delta.y * look_sensitivity)
 		_head.rotation.x = clamp(_head.rotation.x, deg_to_rad(-80.0), deg_to_rad(80.0))
 
 
 # ==============================================================================
-# PROCESS — Keep VirtualJoystickDX region synced to viewport width
+# VIEWPORT RESIZE — Keep VirtualJoystickDX region in sync
 # ==============================================================================
 
-func _process(_delta: float) -> void:
+func _update_joystick_region() -> void:
 	if _joystick and is_instance_valid(_joystick):
 		var vp := get_viewport().get_visible_rect().size
-		_joystick.set("region_w", vp.x * 0.5)
+		_joystick.set("region_x", 0.0)
+		_joystick.set("region_y", 0.0)
+		_joystick.set("region_w", vp.x * 0.45)
 		_joystick.set("region_h", vp.y)
