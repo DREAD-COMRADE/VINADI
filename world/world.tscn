@@ -298,7 +298,6 @@ color = Color(1, 1, 1, 0.9)
 script = ExtResource("3_game_ui")
 
 [node name="TouchControls" parent="." unique_id=1847291035 instance=ExtResource("13_touch")]
-process_mode = 3
 
 [node name="DebugPanel" type="CanvasLayer" parent="." unique_id=1837322482]
 script = ExtResource("4_debug_panel")

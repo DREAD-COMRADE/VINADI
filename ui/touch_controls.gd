@@ -44,7 +44,7 @@ func _ready() -> void:
 	_build_hud()
 	call_deferred("_setup_references")
 	# Auto-show only on touchscreen or mobile
-	var show_hud := DisplayServer.is_touchscreen_available() \
+	var show_hud: bool = DisplayServer.is_touchscreen_available() \
 		or OS.has_feature("mobile") \
 		or OS.has_feature("android") \
 		or OS.has_feature("ios") \
