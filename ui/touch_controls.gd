@@ -190,7 +190,8 @@ func _input(event: InputEvent) -> void:
 
 	# ── TOUCH DOWN ────────────────────────────────────────────────────────────
 	if event is InputEventScreenTouch and event.pressed:
-		var pos := event.position
+		var touch_ev := event as InputEventScreenTouch
+		var pos: Vector2 = touch_ev.position
 
 		# Check if touch is on action buttons
 		if _is_pos_inside_control(_btn_jump, pos) or \
@@ -203,7 +204,7 @@ func _input(event: InputEvent) -> void:
 		if pos.x < half_screen_x:
 			if not _joystick_active:
 				_joystick_active = true
-				_joystick_touch_id = event.index
+				_joystick_touch_id = touch_ev.index
 				_joystick_center = pos
 				_joystick_current = pos
 				_joystick_base.global_position = _joystick_center - _joystick_base.size * 0.5
@@ -213,24 +214,25 @@ func _input(event: InputEvent) -> void:
 		# Right half of screen -> Look Drag
 		else:
 			if _look_touch_id == -1:
-				_look_touch_id = event.index
+				_look_touch_id = touch_ev.index
 				_look_last_pos = pos
 
 	# ── TOUCH UP ──────────────────────────────────────────────────────────────
 	elif event is InputEventScreenTouch and not event.pressed:
-		if event.index == _joystick_touch_id:
+		var touch_ev := event as InputEventScreenTouch
+		if touch_ev.index == _joystick_touch_id:
 			_release_joystick()
-		elif event.index == _look_touch_id:
+		elif touch_ev.index == _look_touch_id:
 			_look_touch_id = -1
 
 	# ── DRAG ──────────────────────────────────────────────────────────────────
 	elif event is InputEventScreenDrag:
-		if event.index == _joystick_touch_id:
-			_joystick_current = event.position
+		var drag_ev := event as InputEventScreenDrag
+		if drag_ev.index == _joystick_touch_id:
+			_joystick_current = drag_ev.position
 			_update_joystick_vector()
-		elif event.index == _look_touch_id:
-			var delta_pos: Vector2 = event.position - _look_last_pos
-			_look_last_pos = event.position
+		elif drag_ev.index == _look_touch_id:
+			var delta_pos: Vector2 = drag_ev.relative
 			_apply_look(delta_pos)
 
 
