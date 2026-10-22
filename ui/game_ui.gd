@@ -74,6 +74,30 @@ func _setup_hud() -> void:
 		_hud.set_countdown(time_remaining, total_time)
 		if not _hud.contamination_depleted.is_connected(trigger_game_over):
 			_hud.contamination_depleted.connect(trigger_game_over)
+		_sync_gas_mask_hud()
+
+
+## Keep the HUD integrity readout tied to the player's actual gas-mask durability.
+## The old passive drain was independent of gas damage, so the HUD could disagree
+## with the player's real durability.
+func _sync_gas_mask_hud() -> void:
+	if not is_instance_valid(_hud):
+		return
+
+	var players := get_tree().get_nodes_in_group("player")
+	if players.is_empty():
+		return
+
+	var player: Node = players[0]
+	var durability: float = -1.0
+
+	if player.has_method("get_gas_mask_durability"):
+		durability = float(player.call("get_gas_mask_durability"))
+	elif "gas_mask_durability" in player:
+		durability = float(player.get("gas_mask_durability"))
+
+	if durability >= 0.0:
+		_hud.set_contamination(clampf(durability, 0.0, 100.0))
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -91,7 +115,7 @@ func _process(delta: float) -> void:
 
 	if _hud:
 		_hud.set_countdown(time_remaining, total_time)
-		_hud.apply_passive_drain(delta)
+		_sync_gas_mask_hud()
 
 	if time_remaining <= 0.0:
 		trigger_game_over()
@@ -183,7 +207,7 @@ func reset_game() -> void:
 		_interact_prompt.visible = false
 	if _hud:
 		_hud.set_countdown(total_time, total_time)
-		_hud.set_contamination(100.0)
+		_sync_gas_mask_hud()
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 
 

@@ -15,6 +15,10 @@ run/main_scene="res://ui/main_menu.tscn"
 config/features=PackedStringArray("4.7", "GL Compatibility")
 config/icon="res://icon.svg"
 
+[autoload]
+
+DiagnosticLogger="*uid://dtihdvfnu4i8n"
+
 [display]
 
 window/stretch/mode="canvas_items"

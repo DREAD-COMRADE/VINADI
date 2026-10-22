@@ -68,11 +68,6 @@ extends CharacterBody3D
 @export var sway_amount:           float = 0.0015
 @export var sway_smooth:           float = 10.0
 
-# ── Fall damage ───────────────────────────────────────────────────────────────
-@export_group("Fall Damage")
-@export var min_fall_distance:     float = 2.0
-@export var damage_multiplier:     float = 25.0
-
 # ==============================================================================
 # NODE REFERENCES
 # ==============================================================================
@@ -97,9 +92,6 @@ var slide_direction:  Vector3 = Vector3.ZERO
 var bob_time:            float = 0.0
 var landing_dip_offset:  float = 0.0
 
-# Fall damage
-var highest_air_y:       float = 0.0
-var is_in_air_last_frame: bool = false
 
 # Exposed so a WeaponHolder / viewmodel node can read this each frame
 var mouse_input:         Vector2 = Vector2.ZERO
@@ -108,10 +100,19 @@ var mouse_input:         Vector2 = Vector2.ZERO
 var health:     float = 100.0
 var max_health: float = 100.0
 
+# Gas Mask
+@export_group("Gas Mask")
+@export var gas_mask_durability: float = 100.0
+@export var max_gas_mask_durability: float = 100.0
+
+
 # Debug overrides (toggled via DebugPanel)
 var god_mode:               bool  = false
 var no_fall_damage:         bool  = false
 var debug_speed_multiplier: float = 1.0
+
+
+var is_riding_trolley: bool = false
 
 
 # Controls state
@@ -181,13 +182,9 @@ func _unhandled_input(event: InputEvent) -> void:
 # PHYSICS LOOP
 # ==============================================================================
 func _physics_process(delta: float) -> void:
-	# Void fall safety check: prevents player from falling infinitely
-	if global_position.y < -15.0:
-		var guis := get_tree().get_nodes_in_group("game_ui")
-		if guis.size() > 0 and guis[0].has_method("trigger_game_over"):
-			guis[0].trigger_game_over()
+	if is_riding_trolley:
+		velocity = Vector3.ZERO
 		return
-
 	if is_control_disabled():
 		_handle_gravity(delta)
 		velocity.x = move_toward(velocity.x, 0.0, friction * 5.0 * delta)
@@ -203,7 +200,10 @@ func _physics_process(delta: float) -> void:
 	_handle_jump()
 	_handle_movement(delta)
 	_handle_camera(delta)
-	_handle_fall_damage()
+	
+	if is_riding_trolley:
+		velocity = Vector3.ZERO
+		return
 
 
 # ==============================================================================
@@ -395,31 +395,6 @@ func match_head_y() -> float:
 		_:                    return 0.8
 
 
-# ==============================================================================
-# FALL DAMAGE
-# ==============================================================================
-func _handle_fall_damage() -> void:
-	if no_fall_damage or god_mode:
-		is_in_air_last_frame = false
-		highest_air_y = global_position.y
-		return
-
-	if not is_on_floor():
-		if not is_in_air_last_frame or global_position.y > highest_air_y:
-			highest_air_y = global_position.y
-		is_in_air_last_frame = true
-	else:
-		if is_in_air_last_frame:
-			var fall_distance := highest_air_y - global_position.y
-			if fall_distance > min_fall_distance:
-				take_damage((fall_distance - min_fall_distance) * damage_multiplier)
-				if not is_inside_tree():
-					return
-			if fall_distance > 1.5:
-				landing_dip_offset = clamp(fall_distance * 0.08, 0.0, 0.45)
-		is_in_air_last_frame = false
-		highest_air_y        = global_position.y
-
 
 # ==============================================================================
 # HELPERS
@@ -451,22 +426,34 @@ func _snap_capsule_height(new_height: float) -> void:
 # ==============================================================================
 # PUBLIC API  (callable by other game systems)
 # ==============================================================================
-func take_damage(amount: float) -> void:
-	if god_mode:
-		return
-	health = max(0.0, health - amount)
-	if health <= 0.0:
-		_on_death()
+func take_damage(_amount: float) -> void:
+	# Player death is controlled exclusively by the countdown/game UI.
+	# Damage calls are intentionally ignored.
+	return
+
+
+## Reduce gas-mask durability when exposed to hazardous gas.
+## Gas hazards can call this with damage_gas_mask(2.0).
+func damage_gas_mask(amount: float) -> void:
+	var previous_durability: float = gas_mask_durability
+	gas_mask_durability = clampf(
+		gas_mask_durability - maxf(amount, 0.0),
+		0.0,
+		max_gas_mask_durability
+	)
+	if gas_mask_durability != previous_durability:
+		print("[Player] Gas mask durability: %.1f / %.1f" % [
+			gas_mask_durability,
+			max_gas_mask_durability
+		])
+
+
+func get_gas_mask_durability() -> float:
+	return gas_mask_durability
 
 
 func heal(amount: float) -> void:
 	health = min(health + amount, max_health)
-
-
-func _on_death() -> void:
-	# Placeholder: reload scene. Replace with a death-screen flow later.
-	get_tree().call_deferred("reload_current_scene")
-
 
 ## Query helpers – useful for animation controllers and game-logic nodes.
 func is_sliding()  -> bool: return movement_state == MovementState.SLIDE
